@@ -1,0 +1,63 @@
+###
+POST http://127.0.0.1:8000/expenses/currency/search HTTP/1.1
+content-type: application/json
+
+{
+    "code" : "AUD"
+}
+
+###
+POST http://127.0.0.1:8000/expenses/category/search HTTP/1.1
+content-type: application/json
+
+{
+    "ownerId": 1,
+    "codes" : ["2", "4"]
+}
+
+###
+POST http://127.0.0.1:8000/expenses/account/search HTTP/1.1
+content-type: application/json
+
+{
+    "ownerId": 1,
+    "codes" : ["2", "4"]
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/search HTTP/1.1
+content-type: application/json
+
+{
+    "ownerId": 1
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/process HTTP/1.1
+content-type: application/json
+
+{
+    "processing_user_id": 1,
+    "transactions": [
+    {
+        "ownerId": 1,
+        "id" : 0,
+        "amount" : 25.6,
+        "accountId" : 2,
+        "categoryId" : 22,
+        "date" : "2024-06-01T12:00:00",
+        "comment" : "test",
+        "active" : true
+    },
+        {
+        "ownerId": 1,
+        "id" : 0,
+        "amount" : 12.6,
+        "accountId" : 2,
+        "categoryId" : 22,
+        "date" : "2024-06-01T12:00:00",
+        "comment" : "test 1",
+        "active" : true
+    }
+    ]
+}
