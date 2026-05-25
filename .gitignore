@@ -2,6 +2,7 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
 
 apps/expenses/database/inserts.sql
+apps/expenses/constants.py
 
 ### Python ###
 # Byte-compiled / optimized / DLL files
