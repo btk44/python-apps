@@ -12,7 +12,7 @@ content-type: application/json
 
 {
     "ownerId": 1,
-    "codes" : ["2", "4"]
+    "codes" : []
 }
 
 ###
@@ -21,7 +21,7 @@ content-type: application/json
 
 {
     "ownerId": 1,
-    "codes" : ["2", "4"]
+    "codes" : ["105"]
 }
 
 ###
@@ -30,6 +30,15 @@ content-type: application/json
 
 {
     "ownerId": 1
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/trycreate2 HTTP/1.1
+content-type: application/json
+
+{
+    "ownerId": 1,
+    "prompt" : "minimarket 35 złty Millennim 1"
 }
 
 ###
