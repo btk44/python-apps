@@ -3,6 +3,7 @@
 
 apps/expenses/database/inserts.sql
 apps/expenses/constants.py
+apps/exp/constants.py
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

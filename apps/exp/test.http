@@ -1,0 +1,126 @@
+###
+POST http://127.0.0.1:8000/expenses/currency/search HTTP/1.1
+content-type: application/json
+
+{
+    "name" : "doll"
+}
+
+###
+POST http://127.0.0.1:8000/expenses/category/search HTTP/1.1
+content-type: application/json
+
+{
+    "userId": 1
+}
+
+###
+POST http://127.0.0.1:8000/expenses/account/search HTTP/1.1
+content-type: application/json
+
+{
+    "userId": 1,
+    "name": "ban"
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/search HTTP/1.1
+content-type: application/json
+
+{
+    "userId": 1
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/trycreate2 HTTP/1.1
+content-type: application/json
+
+{
+    "ownerId": 1,
+    "prompt" : "minimarket 35 złty Millennim 1"
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/process HTTP/1.1
+content-type: application/json
+
+{
+    "processing_user_id": 1,
+    "transactions": [
+    {
+        "ownerId": 1,
+        "id" : 0,
+        "amount" : 25.6,
+        "accountId" : 2,
+        "categoryId" : 22,
+        "date" : "2024-06-01T12:00:00",
+        "comment" : "test",
+        "active" : true
+    },
+        {
+        "ownerId": 1,
+        "id" : 0,
+        "amount" : 12.6,
+        "accountId" : 2,
+        "categoryId" : 22,
+        "date" : "2024-06-01T12:00:00",
+        "comment" : "test 1",
+        "active" : true
+    }
+    ]
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/process-single HTTP/1.1
+content-type: application/json
+
+{
+    "processing_user_id": 1,
+    "transaction": 
+    {
+        "userId": 1,
+        "id" : 13,
+        "amount" : 25.6,
+        "accountId" : 66,
+        "categoryId" : 1,
+        "date" : "2024-06-01T12:00:00",
+        "comment" : "test",
+        "direction" : "debit",
+        "active" : true
+    }
+}
+
+###
+POST http://127.0.0.1:8000/expenses/transaction/process-transfer HTTP/1.1
+content-type: application/json
+
+{
+    "processing_user_id": 1,
+    "transferId": 3,
+    "categoryId" : 1,
+    "date" : "2024-06-01T12:00:00",
+    "comment" : "test",
+    "active" : true,
+
+    "fromAmount" : 25.67,
+    "fromAccountId" : 1,
+
+    "toAmount" : 21.67,
+    "toAccountId" : 2
+}
+
+###
+POST http://127.0.0.1:8000/transactions HTTP/1.1
+content-type: application/json
+
+{
+    "userId": 1,
+    "id" : 12,
+    "amount" : 25.6,
+    "accountId" : 1,
+    "categoryId" : 1,
+    "date" : "2024-06-01T12:00:00",
+    "comment" : "test",
+    "active" : true,
+    "version" : 1
+}

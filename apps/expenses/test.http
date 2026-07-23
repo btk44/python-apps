@@ -29,7 +29,9 @@ POST http://127.0.0.1:8000/expenses/transaction/search HTTP/1.1
 content-type: application/json
 
 {
-    "ownerId": 1
+    "userId": 1,
+    "take" : "3",
+    "offset" : "3"
 }
 
 ###
@@ -49,23 +51,25 @@ content-type: application/json
     "processing_user_id": 1,
     "transactions": [
     {
-        "ownerId": 1,
-        "id" : 0,
-        "amount" : 25.6,
-        "accountId" : 2,
-        "categoryId" : 22,
+        "userId": 1,
+        "id" : 12,
+        "amount" : 90.62887,
+        "accountId" : 1,
+        "categoryId" : 1,
         "date" : "2024-06-01T12:00:00",
-        "comment" : "test",
+        "comment" : "testdgsa",
+        "direction" : "debit",
         "active" : true
     },
-        {
-        "ownerId": 1,
+    {
+        "userId": 1,
         "id" : 0,
-        "amount" : 12.6,
-        "accountId" : 2,
-        "categoryId" : 22,
+        "amount" : -1890.62887,
+        "accountId" : 1,
+        "categoryId" : 1,
         "date" : "2024-06-01T12:00:00",
-        "comment" : "test 1",
+        "comment" : "testdgs",
+        "direction" : "credit",
         "active" : true
     }
     ]
