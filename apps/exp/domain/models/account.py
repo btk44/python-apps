@@ -6,7 +6,6 @@ from typing import Optional
 from apps.exp.domain.common.entity import Entity
 from apps.exp.domain.common.enums import AccountType
 from apps.exp.domain.common.exceptions import InvalidAccountError
-from apps.exp.domain.models.currency import Currency
 
 # _CODE_LENGTH = 8
 # _MAX_NAME_LENGTH = 64
@@ -21,8 +20,6 @@ class Account(Entity):
     type: AccountType
     icon: Optional[str] = None
     is_active: bool = True
-
-    currency: Currency = None
 
     # below methods are not yet needed 
 

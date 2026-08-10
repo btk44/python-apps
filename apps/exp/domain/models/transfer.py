@@ -14,7 +14,6 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from apps.exp.domain.common.exceptions import InvalidTransferError
-from apps.exp.domain.models.transaction import Transaction
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -23,9 +22,6 @@ class Transfer:
     from_tx_id: int
     to_tx_id: int
     created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-
-    from_transaction: Transaction = None
-    to_transaction: Transaction = None
 
     def __post_init__(self) -> None:
         if self.from_tx_id == self.to_tx_id:

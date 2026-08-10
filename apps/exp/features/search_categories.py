@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy import and_, func, select
@@ -6,12 +6,14 @@ from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
 
+from apps.exp.domain.common.enums import CategoryType
 from apps.exp.domain.models.category import Category
+from apps.exp.features.common.helpers import Error
 from apps.exp.infrastructure.mappers.category_mapper import row_to_category
 from apps.exp.infrastructure.session import get_connection
 from apps.exp.infrastructure.tables import categories
 
-from apps.exp.featuers.a_router import router
+from apps.exp.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class CategorySearchCommand(BaseModel):
@@ -30,13 +32,19 @@ class CategoryDto(BaseModel):
     code: str
     name: str
     active: bool
+    icon: str | None
+    version: int
+    type: CategoryType
 
 
 async def get_db() -> AsyncIterator[AsyncConnection]:
     async with get_connection() as conn:
         yield conn
 
-def map_category_entity_to_dto(entity: Category) -> CategoryDto:
+def map_category_entity_to_dto(entity: Category) -> CategoryDto | Error:
+    if entity.id is None:
+        return Error("entity id is not assigned!")
+
     return CategoryDto(
         id=entity.id,
         userId=entity.user_id,
@@ -83,4 +91,14 @@ def build_category_query(command: CategorySearchCommand):
 @router.post("/category/search")
 async def search_categories(command: CategorySearchCommand, conn: AsyncConnection = Depends(get_db)):
     result = await conn.execute(build_category_query(command))
-    return [map_category_entity_to_dto(row_to_category(row)) for row in result]
+    category_entities = [row_to_category(row) for row in result]
+    result_list = []
+    for entity in category_entities:
+        dto = map_category_entity_to_dto(entity) if entity is not None else None
+        if isinstance(dto, Error):
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"status": "broken data in categories table!"})
+
+        elif dto is not None:
+           result_list.append(dto)
+
+    return result_list

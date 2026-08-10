@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
-from apps.exp.featuers.a_router import router as expenses_router
+from apps.exp.features.a_router import router as expenses_router
 
 app = FastAPI()
 app.include_router(expenses_router)

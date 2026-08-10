@@ -1,8 +1,9 @@
 from sqlalchemy.engine import Row
+from sqlalchemy.sql.selectable import NamedFromClause
 from apps.exp.domain.models.category import Category
 from apps.exp.infrastructure.tables import categories
 
-def row_to_category(row: Row, categories_alias=categories) -> Category | None:
+def row_to_category(row: Row, categories_alias: NamedFromClause = categories) -> Category | None:
     m = row._mapping
     if categories_alias.c.id not in m:
         return None

@@ -8,8 +8,6 @@ from typing import Optional
 from apps.exp.domain.common.entity import Entity
 from apps.exp.domain.common.enums import TransactionDirection
 from apps.exp.domain.common.exceptions import InvalidTransactionError
-from apps.exp.domain.models.account import Account
-from apps.exp.domain.models.category import Category
 from apps.exp.domain.value_objects.money import Money
 
 _MAX_COMMENT_LENGTH = 10
@@ -25,9 +23,6 @@ class Transaction(Entity):
     comment: Optional[str] = None
     is_active: bool = True
     transacted_at: datetime
-
-    account: Account = None
-    category: Category = None
 
     def __post_init__(self) -> None:
         self.comment = self._validated_comment(self.comment)

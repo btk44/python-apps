@@ -1,10 +1,12 @@
+from typing import Any
+
 from sqlalchemy.engine import Row
+from sqlalchemy.sql.selectable import NamedFromClause
 
 from apps.exp.domain.models.account import Account
-from apps.exp.infrastructure.mappers.currency_mapper import row_to_currency
 from apps.exp.infrastructure.tables import accounts
 
-def row_to_account(row: Row, accounts_alias=accounts) -> Account | None:
+def row_to_account(row: Row[Any], accounts_alias: NamedFromClause =accounts) -> Account | None:
     m = row._mapping
     if accounts_alias.c.id not in m:
         return None
@@ -22,6 +24,4 @@ def row_to_account(row: Row, accounts_alias=accounts) -> Account | None:
             is_active=m[accounts_alias.c.is_active],
             created_at=m[accounts_alias.c.created_at],
             updated_at=m[accounts_alias.c.updated_at],
-
-            currency=row_to_currency(row)
         )

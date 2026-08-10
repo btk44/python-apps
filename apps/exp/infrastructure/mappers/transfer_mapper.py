@@ -1,10 +1,10 @@
 from sqlalchemy import Row
+from sqlalchemy.sql.selectable import NamedFromClause
 
 from apps.exp.domain.models.transfer import Transfer
-from apps.exp.infrastructure.mappers.transaction_mapper import row_to_transaction
 from apps.exp.infrastructure.tables import transfers
 
-def row_to_transfer(row: Row, transfers_alias=transfers) -> Transfer | None:
+def row_to_transfer(row: Row, transfers_alias: NamedFromClause = transfers) -> Transfer | None:
     m = row._mapping
     if transfers_alias.c.id not in m:
         return None

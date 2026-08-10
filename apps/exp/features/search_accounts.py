@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy import and_, func, select
@@ -6,12 +6,14 @@ from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
 
+from apps.exp.domain.common.enums import AccountType
 from apps.exp.domain.models.account import Account
+from apps.exp.features.common.helpers import Error
 from apps.exp.infrastructure.mappers.account_mapper import row_to_account
 from apps.exp.infrastructure.session import get_connection
 from apps.exp.infrastructure.tables import accounts
 
-from apps.exp.featuers.a_router import router
+from apps.exp.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class AccountSearchCommand(BaseModel):
@@ -31,13 +33,19 @@ class AccountDto(BaseModel):
     code: str
     name: str
     active: bool
+    type: AccountType
+    version: int
+    icon: str | None
 
 
 async def get_db() -> AsyncIterator[AsyncConnection]:
     async with get_connection() as conn:
         yield conn
 
-def map_account_entity_to_dto(entity: Account) -> AccountDto:
+def map_account_entity_to_dto(entity: Account) -> AccountDto | Error:
+    if entity.id is None:
+        return Error("entity id is not assigned!")
+
     return AccountDto(
         id=entity.id,
         userId=entity.user_id,
@@ -89,4 +97,13 @@ def build_account_query(command: AccountSearchCommand):
 @router.post("/account/search")
 async def search_accounts(command: AccountSearchCommand, conn: AsyncConnection = Depends(get_db)):
     result = await conn.execute(build_account_query(command))
-    return [map_account_entity_to_dto(row_to_account(row)) for row in result]
+    account_entities = [row_to_account(row) for row in result.all()]
+    result_list = []
+    for entity in account_entities:
+        dto = map_account_entity_to_dto(entity) if entity is not None else None
+        if isinstance(dto, Error):
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"status": "broken data in account table!"})
+        elif dto is not None: 
+           result_list.append(dto)
+
+    return result_list

@@ -1,14 +1,13 @@
 from sqlalchemy.engine import Row
+from sqlalchemy.sql.selectable import NamedFromClause
 
 from apps.exp.domain.common.enums import TransactionDirection
 from apps.exp.domain.models.transaction import Transaction
 from apps.exp.domain.value_objects.money import Money
-from apps.exp.infrastructure.mappers.account_mapper import row_to_account
-from apps.exp.infrastructure.mappers.category_mapper import row_to_category
 from apps.exp.infrastructure.tables import transactions
 
 
-def row_to_transaction(row: Row, transactions_alias=transactions, *, currency_decimals: int) -> Transaction | None:
+def row_to_transaction(row: Row, transactions_alias: NamedFromClause = transactions, *, currency_decimals: int) -> Transaction | None:
     m = row._mapping
     if transactions_alias.c.id not in m:
         return None

@@ -1,4 +1,5 @@
 from dataclasses import replace
+from decimal import Decimal
 
 from fastapi import Depends
 from fastapi import HTTPException, status
@@ -12,10 +13,11 @@ from datetime import datetime
 
 from apps.exp.domain.common.enums import CategoryType, TransactionDirection
 from apps.exp.domain.models.account import Account
-from apps.exp.domain.models.currency import MAX_CURRENCY_DECIMALS
+from apps.exp.domain.models.currency import MAX_CURRENCY_DECIMALS, Currency
 from apps.exp.domain.models.transaction import Transaction
 from apps.exp.domain.models.transfer import Transfer
 from apps.exp.domain.value_objects.money import Money
+from apps.exp.features.common.helpers import Error, float_to_decimal
 from apps.exp.infrastructure.mappers.account_mapper import row_to_account
 from apps.exp.infrastructure.mappers.category_mapper import row_to_category
 from apps.exp.infrastructure.mappers.currency_mapper import row_to_currency
@@ -23,7 +25,7 @@ from apps.exp.infrastructure.mappers.transfer_mapper import row_to_transfer, tra
 from apps.exp.infrastructure.mappers.transaction_mapper import row_to_transaction, transaction_to_insert_values, transaction_to_update_values
 from apps.exp.infrastructure.session import get_connection
 from apps.exp.infrastructure.tables import transactions, categories, accounts, currencies, transfers
-from apps.exp.featuers.a_router import router
+from apps.exp.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class TransactionDto(BaseModel):
@@ -37,6 +39,7 @@ class TransactionDto(BaseModel):
     comment: str | None = None
     active: bool
     transferId: int | None = None
+    version: int
 
 class TransferProcessCommand(BaseModel):
     processingUserId: int = 1
@@ -55,14 +58,17 @@ async def get_db() -> AsyncIterator[AsyncConnection]:
         yield conn
 
 
-def map_transaction_entity_to_dto(entity: Transaction, transfer_id: int) -> TransactionDto:
+def map_transaction_entity_to_dto(entity: Transaction, transfer_id: int) -> TransactionDto | Error:
+    if entity.id is None:
+        return Error("entity has no id assigned!")
+
     return TransactionDto(
         id=entity.id,
         userId=entity.user_id,
         accountId=entity.account_id,
         categoryId=entity.category_id,
         direction=entity.direction,
-        amount=entity.amount,
+        amount=float(entity.amount),
         date=entity.transacted_at,
         comment=entity.comment,
         active=entity.is_active,
@@ -75,7 +81,7 @@ async def update_existing_transaction(conn: AsyncConnection, tx: Transaction, \
                                       category_id: int, direction: TransactionDirection, comment: str | None) -> Transaction:
     tx.update_account(account_id)
     tx.recategorize(category_id, direction)
-    tx.update_amount(amount, currency_decimals)
+    tx.update_amount(Decimal(str(amount)), currency_decimals)
     tx.update_comment(comment)
     values = transaction_to_update_values(tx)
     stmt = update(transactions).where(transactions.c.id == tx.id).values(**values).returning(
@@ -101,7 +107,7 @@ async def create_new_transaction(conn: AsyncConnection, user_id: int, date: date
         user_id=user_id,
         account_id=account_id,
         category_id=category_id,
-        money=Money(amount=amount, decimals=currency_decimals),
+        money=Money(amount=float_to_decimal(amount), decimals=currency_decimals),
         direction=direction,
         comment=comment,
         transacted_at=date
@@ -126,7 +132,7 @@ async def create_new_transaction(conn: AsyncConnection, user_id: int, date: date
     )
 
 
-async def get_transfer_transactions(conn: AsyncConnection, user_id: int, transfer_id: int) -> set[Transaction] | None:
+async def get_transfer_transactions(conn: AsyncConnection, user_id: int, transfer_id: int) -> tuple[Transaction, Transaction] | Error:
     from_transaction_alias = transactions.alias("from_tx")
     to_transaction_alias = transactions.alias("to_tx")
 
@@ -143,15 +149,20 @@ async def get_transfer_transactions(conn: AsyncConnection, user_id: int, transfe
     transfer_row = (await conn.execute(query)).one_or_none()
 
     if transfer_row is None:
-        return None
+        return Error("transfer not found")
 
     transfer = row_to_transfer(transfer_row)
+    if transfer is None:
+        return Error("transfer not found")
     from_transaction = row_to_transaction(transfer_row, from_transaction_alias, currency_decimals=MAX_CURRENCY_DECIMALS) # to do
     to_transaction = row_to_transaction(transfer_row, to_transaction_alias, currency_decimals=MAX_CURRENCY_DECIMALS)
+    if from_transaction is None or to_transaction is None:
+        return Error("transfer transactions were not found")
 
-    return {from_transaction, to_transaction}
+    return from_transaction, to_transaction
 
-async def get_accounts_with_currencies(conn: AsyncConnection, user_id: int, from_account_id: int, to_account_id: int) -> set[Account] | None:
+async def get_accounts_with_currencies(conn: AsyncConnection, user_id: int, from_account_id: int, to_account_id: int) \
+    -> tuple[Account, Currency, Account, Currency] | Error:
     account_ids = {from_account_id, to_account_id}
     query = (
         select(accounts, currencies)
@@ -162,18 +173,22 @@ async def get_accounts_with_currencies(conn: AsyncConnection, user_id: int, from
     result = await conn.execute(query)
 
     if result.rowcount != 2:
-        return None
+        return Error("accounts count is incorrect") 
 
     result_rows = result.all()
     from_account_row = next(r for r in result_rows if r.id == from_account_id)
     to_account_row = next(r for r in result_rows if r.id == to_account_id)
 
     from_account = row_to_account(from_account_row)
-    from_account.currency = row_to_currency(from_account_row)
+    from_currency = row_to_currency(from_account_row)
     to_account = row_to_account(to_account_row)
-    to_account.currency = row_to_currency(to_account_row)
+    to_currency = row_to_currency(to_account_row)
 
-    return {from_account, to_account}
+    if from_account is None or from_currency is None or \
+       to_account is None or to_currency is None:
+        return Error("there was an error in fetching transfer accounts and currencies")
+
+    return from_account, from_currency, to_account, to_currency
 
 
 # for transfer transactions there are always both transactions required!
@@ -198,15 +213,15 @@ async def process_transactions(command: TransferProcessCommand, conn: AsyncConne
 
     category = row_to_category(category_result.one())
 
-    if category.type != CategoryType.BOTH:
+    if category is None or category.type != CategoryType.BOTH:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "transfer category must be BOTH type"})
 
     transfer_accounts = await get_accounts_with_currencies(conn, command.processingUserId, command.fromAccountId, command.toAccountId)
 
-    if transfer_accounts is None:
+    if isinstance(transfer_accounts, Error):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "transaction reference non-existing account"})
 
-    from_account, to_account = transfer_accounts
+    from_account, from_currency, to_account, to_currency = transfer_accounts
 
     if from_account.currency_id == to_account.currency_id and command.fromAmount != command.toAmount:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "when currency is the same the amount must be the same as well"})
@@ -217,41 +232,53 @@ async def process_transactions(command: TransferProcessCommand, conn: AsyncConne
         if command.transferId is not None and command.transferId > 0:
             transfer_transactions = await get_transfer_transactions(conn, command.processingUserId, command.transferId)
 
-            if transfer_transactions is None:
+            if isinstance(transfer_transactions, Error):
                 raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "transfer does not exist or is broken"})
 
             from_transaction, to_transaction = transfer_transactions
             
             new_from_transaction = await update_existing_transaction(conn, from_transaction, \
-                                                                    command.fromAccountId, command.fromAmount, from_account.currency.decimals, \
+                                                                    command.fromAccountId, command.fromAmount, from_currency.decimals, \
                                                                     command.categoryId, TransactionDirection.DEBIT, command.comment)
             
             new_to_transaction = await update_existing_transaction(conn, to_transaction, \
-                                                                command.toAccountId, command.toAmount, to_account.currency.decimals, \
+                                                                command.toAccountId, command.toAmount, to_currency.decimals, \
                                                                 command.categoryId, TransactionDirection.CREDIT, command.comment)
         else:
             new_from_transaction = await create_new_transaction(conn, command.processingUserId, command.date, \
-                                                                command.fromAccountId, command.fromAmount, from_account.currency.decimals, \
+                                                                command.fromAccountId, command.fromAmount, from_currency.decimals, \
                                                                 command.categoryId, TransactionDirection.DEBIT, command.comment)
 
             new_to_transaction = await create_new_transaction(conn, command.processingUserId, command.date, \
-                                                            command.toAccountId, command.toAmount, to_account.currency.decimals, \
+                                                            command.toAccountId, command.toAmount, to_currency.decimals, \
                                                             command.categoryId, TransactionDirection.CREDIT, command.comment)
+
+            if new_from_transaction.id is None or new_to_transaction.id is None:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "there was an error when generating new transactions"})
 
             new_transfer = Transfer(from_tx_id=new_from_transaction.id, to_tx_id=new_to_transaction.id)
             stmt = insert(transfers).values(**transfer_to_insert_values(new_transfer)).returning(transfers.c.id)
             transfer_id = (await conn.execute(stmt)).one().id
-
-
+               
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, \
-                            detail={"status": "error processing transactions", "error": str(e)})
+                            detail={"status": "error processing transactions: " + str(e)})
     
     await conn.commit()
 
-    return [
-        map_transaction_entity_to_dto(new_from_transaction, transfer_id),
-        map_transaction_entity_to_dto(new_to_transaction, transfer_id)
-    ]
+    if transfer_id is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "there was an error when generating new transfer"})
 
+    from_transaction_dto = map_transaction_entity_to_dto(new_from_transaction, transfer_id)
+    to_transaction_dto = map_transaction_entity_to_dto(new_to_transaction, transfer_id)
 
+    if isinstance(from_transaction_dto, Error) or isinstance(to_transaction_dto, Error):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail={"status": "error processing transactions"})
+
+    if from_transaction_dto.id == -1 or to_transaction_dto.id == -1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, \
+                            detail={"status": "error processing transactions"})
+
+    return [ from_transaction_dto, to_transaction_dto]
+
+# to do: maybe transfer should have versioning

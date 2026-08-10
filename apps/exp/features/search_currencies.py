@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy import and_, select
@@ -7,11 +7,12 @@ from collections.abc import AsyncIterator
 from pydantic import BaseModel
 
 from apps.exp.domain.models.currency import Currency
+from apps.exp.features.common.helpers import Error
 from apps.exp.infrastructure.mappers.currency_mapper import row_to_currency
 from apps.exp.infrastructure.session import get_connection
 from apps.exp.infrastructure.tables import currencies
 
-from apps.exp.featuers.a_router import router
+from apps.exp.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class CurrencySearchCommand(BaseModel):
@@ -36,7 +37,10 @@ async def get_db() -> AsyncIterator[AsyncConnection]:
     async with get_connection() as conn:
         yield conn
 
-def map_currency_entity_to_dto(entity: Currency) -> CurrencyDto:
+def map_currency_entity_to_dto(entity: Currency) -> CurrencyDto | Error:
+    if entity.id is None:
+        return Error("entity id is not assigned!")
+
     return CurrencyDto(
         id=entity.id,
         code=entity.code,
@@ -76,4 +80,13 @@ def build_currency_query(command: CurrencySearchCommand):
 @router.post("/currency/search")
 async def search_currencies(command: CurrencySearchCommand, conn: AsyncConnection = Depends(get_db)):
     result = await conn.execute(build_currency_query(command))
-    return [map_currency_entity_to_dto(row_to_currency(row)) for row in result]
+    currency_entities = [row_to_currency(row) for row in result ]
+    result_list = []
+    for entity in currency_entities:
+        dto = map_currency_entity_to_dto(entity) if entity is not None else None
+        if isinstance(dto, Error):
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"status": "broken data in currencies table!"})
+        elif dto is not None:
+           result_list.append(dto)
+
+    return result_list

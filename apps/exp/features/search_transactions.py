@@ -1,7 +1,7 @@
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncConnection
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, or_, select
 from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
@@ -9,11 +9,13 @@ from datetime import datetime
 
 from apps.exp.domain.common.enums import TransactionDirection
 from apps.exp.domain.models.transaction import Transaction
+from apps.exp.features.common.helpers import Error
 from apps.exp.infrastructure.mappers.transaction_mapper import row_to_transaction
 from apps.exp.infrastructure.session import get_connection
-from apps.exp.infrastructure.tables import transactions
+from apps.exp.infrastructure.tables import transactions, transfers
+from apps.exp.domain.models.currency import MAX_CURRENCY_DECIMALS
 
-from apps.exp.featuers.a_router import router
+from apps.exp.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class TransactionSearchCommand(BaseModel):
@@ -39,12 +41,14 @@ class TransactionDto(BaseModel):
     accountId: int
     categoryId: int
     date: datetime
-    comment: str
+    comment: str | None = None
     active: bool
+    transferId: int | None = None
+    version: int
 
 
 class TransactionSearchResult(BaseModel):
-    transactions: list[TransactionDto]
+    transactions: list[TransactionDto | None]
     totalCount: int
 
 
@@ -53,18 +57,22 @@ async def get_db() -> AsyncIterator[AsyncConnection]:
         yield conn
 
 
-def map_transaction_entity_to_dto(entity: Transaction) -> TransactionDto:
+def map_transaction_entity_to_dto(entity: Transaction, transfer_id: int | None = None) -> TransactionDto | Error:
+    if entity.id is None:
+        return Error("entity id is not assigned!")
+
     return TransactionDto(
         id=entity.id,
         userId=entity.user_id,
         accountId=entity.account_id,
         categoryId=entity.category_id,
-        amount=entity.amount,
+        amount=float(entity.money.amount),
         date=entity.transacted_at,
         comment=entity.comment,
         active=entity.is_active,
         version=entity.version,
-        direction=entity.direction
+        direction=entity.direction,
+        transferId=transfer_id,
     )
 
 def build_transaction_conditions(command: TransactionSearchCommand):
@@ -92,10 +100,10 @@ def build_transaction_conditions(command: TransactionSearchCommand):
         conditions.append(transactions.c.account_id.in_(command.accounts))
 
     if command.dateFrom is not None:
-        conditions.append(transactions.c.date >= command.dateFrom)
+        conditions.append(transactions.c.transacted_at >= command.dateFrom)
 
     if command.dateTo is not None:
-        conditions.append(transactions.c.date <= command.dateTo)
+        conditions.append(transactions.c.transacted_at <= command.dateTo)
 
     if command.comment is not None and command.comment != "":
         lowered_comment = command.comment.lower()
@@ -106,7 +114,16 @@ def build_transaction_conditions(command: TransactionSearchCommand):
 
 def build_transaction_query(command: TransactionSearchCommand):
     conditions = build_transaction_conditions(command)
-    query = select(transactions)
+    transfer_alias = transfers.alias("transfer_lookup")
+    query = (
+        select(transactions, transfer_alias.c.id.label("transfer_id"))
+        .select_from(
+            transactions.outerjoin(
+                transfer_alias,
+                or_(transfer_alias.c.from_tx_id == transactions.c.id, transfer_alias.c.to_tx_id == transactions.c.id),
+            )
+        )
+    )
     if conditions:
         query = query.where(and_(*conditions))
 
@@ -131,8 +148,17 @@ def build_transaction_count_query(command: TransactionSearchCommand):
 async def search_transactions(command: TransactionSearchCommand, conn: AsyncConnection = Depends(get_db)):
     result = await conn.execute(build_transaction_query(command))
     total_count_result = await conn.execute(build_transaction_count_query(command))
+    transaction_entities = [(row_to_transaction(row, currency_decimals=MAX_CURRENCY_DECIMALS), row._mapping.get("transfer_id")) for row in result.all()]
+
+    dto_list = []
+    for entity_data in transaction_entities:
+        dto = map_transaction_entity_to_dto(entity_data[0], entity_data[1]) if entity_data[0] is not None else None
+        if isinstance(dto, Error):
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={"status": "broken data in transactions related table!"})
+        elif dto is not None: 
+           dto_list.append(dto)
 
     return TransactionSearchResult(
-        transactions=[map_transaction_entity_to_dto(row_to_transaction(row, currency_decimals=4)) for row in result.all()],
+        transactions=dto_list,
         totalCount=total_count_result.scalar_one()
     )
