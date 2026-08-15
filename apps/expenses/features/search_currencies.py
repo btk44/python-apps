@@ -6,13 +6,13 @@ from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
 
-from apps.exp.domain.models.currency import Currency
-from apps.exp.features.common.helpers import Error
-from apps.exp.infrastructure.mappers.currency_mapper import row_to_currency
-from apps.exp.infrastructure.session import get_connection
-from apps.exp.infrastructure.tables import currencies
+from apps.expenses.domain.models.currency import Currency
+from apps.expenses.features.common.helpers import Error
+from apps.expenses.infrastructure.mappers.currency_mapper import row_to_currency
+from apps.expenses.infrastructure.session import get_connection
+from apps.expenses.infrastructure.tables import currencies
 
-from apps.exp.features.a_router import router
+from apps.expenses.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class CurrencySearchCommand(BaseModel):

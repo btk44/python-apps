@@ -5,10 +5,10 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from apps.exp.domain.common.entity import Entity
-from apps.exp.domain.common.enums import TransactionDirection
-from apps.exp.domain.common.exceptions import InvalidTransactionError
-from apps.exp.domain.value_objects.money import Money
+from apps.expenses.domain.common.entity import Entity
+from apps.expenses.domain.common.enums import TransactionDirection
+from apps.expenses.domain.common.exceptions import InvalidTransactionError
+from apps.expenses.domain.value_objects.money import Money
 
 _MAX_COMMENT_LENGTH = 10
 

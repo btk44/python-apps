@@ -3,8 +3,8 @@ from typing import Any
 from sqlalchemy.engine import Row
 from sqlalchemy.sql.selectable import NamedFromClause
 
-from apps.exp.domain.models.account import Account
-from apps.exp.infrastructure.tables import accounts
+from apps.expenses.domain.models.account import Account
+from apps.expenses.infrastructure.tables import accounts
 
 def row_to_account(row: Row[Any], accounts_alias: NamedFromClause =accounts) -> Account | None:
     m = row._mapping

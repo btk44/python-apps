@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from apps.exp.domain.common.entity import Entity
-from apps.exp.domain.common.exceptions import InvalidCurrencyError
+from apps.expenses.domain.common.entity import Entity
+from apps.expenses.domain.common.exceptions import InvalidCurrencyError
 
 # _CODE_LENGTH = 3  # ISO 4217
 MAX_CURRENCY_DECIMALS = 4

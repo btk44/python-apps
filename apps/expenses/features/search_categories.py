@@ -6,14 +6,14 @@ from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
 
-from apps.exp.domain.common.enums import CategoryType
-from apps.exp.domain.models.category import Category
-from apps.exp.features.common.helpers import Error
-from apps.exp.infrastructure.mappers.category_mapper import row_to_category
-from apps.exp.infrastructure.session import get_connection
-from apps.exp.infrastructure.tables import categories
+from apps.expenses.domain.common.enums import CategoryType
+from apps.expenses.domain.models.category import Category
+from apps.expenses.features.common.helpers import Error
+from apps.expenses.infrastructure.mappers.category_mapper import row_to_category
+from apps.expenses.infrastructure.session import get_connection
+from apps.expenses.infrastructure.tables import categories
 
-from apps.exp.features.a_router import router
+from apps.expenses.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class CategorySearchCommand(BaseModel):

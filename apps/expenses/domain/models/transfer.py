@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Optional
 
-from apps.exp.domain.common.exceptions import InvalidTransferError
+from apps.expenses.domain.common.exceptions import InvalidTransferError
 
 
 @dataclass(frozen=True, kw_only=True)

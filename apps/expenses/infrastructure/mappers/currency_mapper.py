@@ -1,8 +1,8 @@
 from sqlalchemy.engine import Row
 from sqlalchemy.sql.selectable import NamedFromClause
 
-from apps.exp.domain.models.currency import Currency
-from apps.exp.infrastructure.tables import currencies
+from apps.expenses.domain.models.currency import Currency
+from apps.expenses.infrastructure.tables import currencies
 
 def row_to_currency(row: Row, currencies_alias: NamedFromClause = currencies) -> Currency | None:
     m = row._mapping

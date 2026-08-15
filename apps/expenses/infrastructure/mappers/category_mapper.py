@@ -1,7 +1,7 @@
 from sqlalchemy.engine import Row
 from sqlalchemy.sql.selectable import NamedFromClause
-from apps.exp.domain.models.category import Category
-from apps.exp.infrastructure.tables import categories
+from apps.expenses.domain.models.category import Category
+from apps.expenses.infrastructure.tables import categories
 
 def row_to_category(row: Row, categories_alias: NamedFromClause = categories) -> Category | None:
     m = row._mapping

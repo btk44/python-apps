@@ -6,14 +6,14 @@ from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
 
-from apps.exp.domain.common.enums import AccountType
-from apps.exp.domain.models.account import Account
-from apps.exp.features.common.helpers import Error
-from apps.exp.infrastructure.mappers.account_mapper import row_to_account
-from apps.exp.infrastructure.session import get_connection
-from apps.exp.infrastructure.tables import accounts
+from apps.expenses.domain.common.enums import AccountType
+from apps.expenses.domain.models.account import Account
+from apps.expenses.features.common.helpers import Error
+from apps.expenses.infrastructure.mappers.account_mapper import row_to_account
+from apps.expenses.infrastructure.session import get_connection
+from apps.expenses.infrastructure.tables import accounts
 
-from apps.exp.features.a_router import router
+from apps.expenses.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class AccountSearchCommand(BaseModel):

@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from apps.exp.domain.common.entity import Entity
-from apps.exp.domain.common.exceptions import InvalidUserError
-from apps.exp.domain.value_objects.email import Email
+from apps.expenses.domain.common.entity import Entity
+from apps.expenses.domain.common.exceptions import InvalidUserError
+from apps.expenses.domain.value_objects.email import Email
 
 _MAX_DISPLAY_NAME = 128
 

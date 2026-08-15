@@ -1,10 +1,10 @@
 from sqlalchemy.engine import Row
 from sqlalchemy.sql.selectable import NamedFromClause
 
-from apps.exp.domain.common.enums import TransactionDirection
-from apps.exp.domain.models.transaction import Transaction
-from apps.exp.domain.value_objects.money import Money
-from apps.exp.infrastructure.tables import transactions
+from apps.expenses.domain.common.enums import TransactionDirection
+from apps.expenses.domain.models.transaction import Transaction
+from apps.expenses.domain.value_objects.money import Money
+from apps.expenses.infrastructure.tables import transactions
 
 
 def row_to_transaction(row: Row, transactions_alias: NamedFromClause = transactions, *, currency_decimals: int) -> Transaction | None:

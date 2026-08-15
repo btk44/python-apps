@@ -7,15 +7,15 @@ from collections.abc import AsyncIterator
 from pydantic import BaseModel
 from datetime import datetime
 
-from apps.exp.domain.common.enums import TransactionDirection
-from apps.exp.domain.models.transaction import Transaction
-from apps.exp.features.common.helpers import Error
-from apps.exp.infrastructure.mappers.transaction_mapper import row_to_transaction
-from apps.exp.infrastructure.session import get_connection
-from apps.exp.infrastructure.tables import transactions, transfers
-from apps.exp.domain.models.currency import MAX_CURRENCY_DECIMALS
+from apps.expenses.domain.common.enums import TransactionDirection
+from apps.expenses.domain.models.transaction import Transaction
+from apps.expenses.features.common.helpers import Error
+from apps.expenses.infrastructure.mappers.transaction_mapper import row_to_transaction
+from apps.expenses.infrastructure.session import get_connection
+from apps.expenses.infrastructure.tables import transactions, transfers
+from apps.expenses.domain.models.currency import MAX_CURRENCY_DECIMALS
 
-from apps.exp.features.a_router import router
+from apps.expenses.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class TransactionSearchCommand(BaseModel):

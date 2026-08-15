@@ -3,9 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
-from apps.exp.domain.common.entity import Entity
-from apps.exp.domain.common.enums import CategoryType
-from apps.exp.domain.common.exceptions import InvalidCategoryError
+from apps.expenses.domain.common.entity import Entity
+from apps.expenses.domain.common.enums import CategoryType
+from apps.expenses.domain.common.exceptions import InvalidCategoryError
 
 # _CODE_LENGTH = 8
 # _MAX_NAME_LENGTH = 64

@@ -1,8 +1,8 @@
 from sqlalchemy import Row
 from sqlalchemy.sql.selectable import NamedFromClause
 
-from apps.exp.domain.models.transfer import Transfer
-from apps.exp.infrastructure.tables import transfers
+from apps.expenses.domain.models.transfer import Transfer
+from apps.expenses.infrastructure.tables import transfers
 
 def row_to_transfer(row: Row, transfers_alias: NamedFromClause = transfers) -> Transfer | None:
     m = row._mapping

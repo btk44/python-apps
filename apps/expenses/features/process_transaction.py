@@ -10,20 +10,20 @@ from collections.abc import AsyncIterator
 from pydantic import BaseModel
 from datetime import datetime
 
-from apps.exp.domain.common.enums import CategoryType, TransactionDirection
-from apps.exp.domain.models import currency
-from apps.exp.domain.models.account import Account
-from apps.exp.domain.models.currency import Currency
-from apps.exp.domain.models.transaction import Transaction
-from apps.exp.domain.value_objects.money import Money
-from apps.exp.features.common.helpers import Error, float_to_decimal
-from apps.exp.infrastructure.mappers.account_mapper import row_to_account
-from apps.exp.infrastructure.mappers.category_mapper import row_to_category
-from apps.exp.infrastructure.mappers.currency_mapper import row_to_currency
-from apps.exp.infrastructure.mappers.transaction_mapper import row_to_transaction, transaction_to_insert_values, transaction_to_update_values
-from apps.exp.infrastructure.session import get_connection
-from apps.exp.infrastructure.tables import transactions, categories, accounts, currencies
-from apps.exp.features.a_router import router
+from apps.expenses.domain.common.enums import CategoryType, TransactionDirection
+from apps.expenses.domain.models import currency
+from apps.expenses.domain.models.account import Account
+from apps.expenses.domain.models.currency import Currency
+from apps.expenses.domain.models.transaction import Transaction
+from apps.expenses.domain.value_objects.money import Money
+from apps.expenses.features.common.helpers import Error, float_to_decimal
+from apps.expenses.infrastructure.mappers.account_mapper import row_to_account
+from apps.expenses.infrastructure.mappers.category_mapper import row_to_category
+from apps.expenses.infrastructure.mappers.currency_mapper import row_to_currency
+from apps.expenses.infrastructure.mappers.transaction_mapper import row_to_transaction, transaction_to_insert_values, transaction_to_update_values
+from apps.expenses.infrastructure.session import get_connection
+from apps.expenses.infrastructure.tables import transactions, categories, accounts, currencies
+from apps.expenses.features.a_router import router
 
 # DTOs and command models will have camel case properties to be more convenient for frontend
 class TransactionDto(BaseModel):

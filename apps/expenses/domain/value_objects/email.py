@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from apps.exp.domain.common.exceptions import InvalidEmailError
+from apps.expenses.domain.common.exceptions import InvalidEmailError
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 _MAX_LENGTH = 256  # matches users.email VARCHAR(256)

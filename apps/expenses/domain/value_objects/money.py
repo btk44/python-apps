@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 
-from apps.exp.domain.common.exceptions import InvalidMoneyError
+from apps.expenses.domain.common.exceptions import InvalidMoneyError
 
 
 @dataclass(frozen=True, slots=True)
