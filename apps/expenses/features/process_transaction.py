@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy import and_, insert, select, update
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 from pydantic import BaseModel
 from datetime import datetime
@@ -43,7 +43,7 @@ class TransactionProcessCommand(BaseModel):
     processingUserId: int = 1
     transaction: TransactionDto
 
-async def get_db() -> AsyncIterator[AsyncConnection]:
+async def get_db() -> AsyncGenerator[AsyncConnection]:
     async with get_connection() as conn:
         yield conn
 

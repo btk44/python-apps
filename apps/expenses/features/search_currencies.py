@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 
 from sqlalchemy.ext.asyncio import AsyncConnection
 from sqlalchemy import and_, select
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 
 from pydantic import BaseModel
 
@@ -33,7 +33,7 @@ class CurrencyDto(BaseModel):
     active: bool
 
 
-async def get_db() -> AsyncIterator[AsyncConnection]:
+async def get_db() -> AsyncGenerator[AsyncConnection]:
     async with get_connection() as conn:
         yield conn
 

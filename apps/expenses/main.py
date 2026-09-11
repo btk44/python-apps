@@ -3,9 +3,11 @@ from __future__ import annotations
 from fastapi import FastAPI
 from starlette.responses import JSONResponse
 from apps.expenses.features.a_router import router as expenses_router
+from apps.activities.features.a_router import router as activities_router
 
 app = FastAPI()
 app.include_router(expenses_router)
+app.include_router(activities_router)
 
 import logging
 

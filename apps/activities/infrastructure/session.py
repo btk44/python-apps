@@ -1,9 +1,3 @@
-"""Async engine + connection lifecycle.
-
-Core (not ORM) is used deliberately: no Session, no identity map — the
-repository layer runs explicit `select`/`insert`/`update` statements over
-a plain `AsyncConnection` and maps rows to/from domain entities itself.
-"""
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
