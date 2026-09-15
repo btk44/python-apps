@@ -51,7 +51,7 @@ Location and target filters can be applied together in a single query.
 | city               | VARCHAR(100)          | Optional                                           |
 | location           | GEOGRAPHY(POINT,4326) | Required; single source of truth for coordinates, spatially indexed |
 | activity_type      | VARCHAR(20)           | `place`, `activity`, or `event`                    |
-| google_maps_url    | VARCHAR(500)          | Optional                                           |
+| map_url            | VARCHAR(500)          | Optional                                           |
 | website_url        | VARCHAR(500)          | Optional                                           |
 | start_date         | TIMESTAMPTZ           | Optional; used for events (e.g. concerts)          |
 | end_date           | TIMESTAMPTZ           | Optional; must be ≥ start_date if both are set     |

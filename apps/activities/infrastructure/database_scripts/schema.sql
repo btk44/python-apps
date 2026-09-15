@@ -44,7 +44,7 @@ CREATE TABLE activities (
     activity_type    VARCHAR(20) NOT NULL DEFAULT 'place', -- 'place', 'activity', 'event'
 
     -- Optional links
-    google_maps_url  VARCHAR(500),
+    map_url          VARCHAR(500),
     website_url      VARCHAR(500),
 
     -- Optional scheduling (mainly for events, e.g. concerts)
@@ -60,7 +60,7 @@ CREATE TABLE activities (
 
     CONSTRAINT chk_activity_type CHECK (activity_type IN ('place', 'activity', 'event')),
     CONSTRAINT chk_country_code CHECK (country_code IS NULL OR country_code ~ '^[A-Z]{2}$'),
-    CONSTRAINT chk_google_maps_url CHECK (google_maps_url IS NULL OR google_maps_url ~ '^https?://'),
+    CONSTRAINT chk_map_url CHECK (map_url IS NULL OR map_url ~ '^https?://'),
     CONSTRAINT chk_website_url CHECK (website_url IS NULL OR website_url ~ '^https?://'),
     CONSTRAINT chk_date_order CHECK (end_date IS NULL OR start_date IS NULL OR end_date >= start_date)
 );
@@ -202,7 +202,7 @@ RETURNS TABLE (
     latitude         DOUBLE PRECISION,
     longitude        DOUBLE PRECISION,
     activity_type    VARCHAR,
-    google_maps_url  VARCHAR,
+    map_url          VARCHAR,
     website_url      VARCHAR,
     start_date       TIMESTAMPTZ,
     end_date         TIMESTAMPTZ,
@@ -227,7 +227,7 @@ AS $$
         ST_Y(a.location::geometry) AS latitude,
         ST_X(a.location::geometry) AS longitude,
         a.activity_type,
-        a.google_maps_url,
+        a.map_url,
         a.website_url,
         a.start_date,
         a.end_date,

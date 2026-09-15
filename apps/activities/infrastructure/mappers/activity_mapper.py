@@ -1,10 +1,21 @@
 from __future__ import annotations
 
+from sqlalchemy import func, literal_column
 from sqlalchemy.engine import Row
 from sqlalchemy.sql.selectable import NamedFromClause
 
 from apps.activities.domain.models.activity import Activity
 from apps.activities.infrastructure.tables import activities
+
+
+def activity_latitude_column(activities_alias: NamedFromClause = activities):
+    location_geometry = activities_alias.c.location.op("::")(literal_column("geometry"))
+    return func.ST_Y(location_geometry).label("latitude")
+
+
+def activity_longitude_column(activities_alias: NamedFromClause = activities):
+    location_geometry = activities_alias.c.location.op("::")(literal_column("geometry"))
+    return func.ST_X(location_geometry).label("longitude")
 
 
 def row_to_activity(row: Row, activities_alias: NamedFromClause = activities) -> Activity:
@@ -20,10 +31,10 @@ def row_to_activity(row: Row, activities_alias: NamedFromClause = activities) ->
             country_code=m[activities_alias.c.country_code],
             region=m[activities_alias.c.region],
             city=m[activities_alias.c.city],
-            latitude=m[activities_alias.c.latitude],
-            longitude=m[activities_alias.c.longitude],
+            latitude=m["latitude"],
+            longitude=m["longitude"],
             activity_type=m[activities_alias.c.activity_type],
-            map_url=m[activities_alias.c.google_maps_url],
+            map_url=m[activities_alias.c.map_url],
             web_url=m[activities_alias.c.website_url],
             start_date=m[activities_alias.c.start_date],
             end_date=m[activities_alias.c.end_date],
@@ -41,13 +52,13 @@ def activity_to_insert_values(activity: Activity) -> dict:
         "country_code": activity.country_code,
         "region": activity.region,
         "city": activity.city,
-        "latitude": activity.latitude,
-        "longitude": activity.longitude,
+        "location": _activity_location_value(activity),
         "activity_type": activity.activity_type,
-        "google_maps_url": activity.map_url,
+        "map_url": activity.map_url,
         "website_url": activity.web_url,
         "start_date": activity.start_date,
-        "end_date": activity.end_date
+        "end_date": activity.end_date,
+        "is_active": activity.is_active,
     }
 
 def activity_to_update_values(activity: Activity) -> dict:
@@ -58,13 +69,18 @@ def activity_to_update_values(activity: Activity) -> dict:
         "country_code": activity.country_code,
         "region": activity.region,
         "city": activity.city,
-        "latitude": activity.latitude,
-        "longitude": activity.longitude,
+        "location": _activity_location_value(activity),
         "activity_type": activity.activity_type,
-        "google_maps_url": activity.map_url,
+        "map_url": activity.map_url,
         "website_url": activity.web_url,
         "start_date": activity.start_date,
         "end_date": activity.end_date,
         "is_active": activity.is_active,
-        "version": activity.version # verfy this TO DO
     }
+
+
+def _activity_location_value(activity: Activity):
+    return func.ST_SetSRID(
+        func.ST_MakePoint(activity.longitude, activity.latitude),
+        4326,
+    ).cast(activities.c.location.type)

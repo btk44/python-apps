@@ -82,7 +82,7 @@ def row_to_activity(row: dict) -> ActivityDto:
         region=row["region"],
         city=row["city"],
         activity_type=row["activity_type"],
-        map_url=row["google_maps_url"],
+        map_url=row["map_url"],
         web_url=row["website_url"],
         start_date=row["start_date"],
         end_time=row["end_date"],

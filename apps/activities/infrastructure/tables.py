@@ -24,7 +24,7 @@ activities = Table(
     Column("city", String(100)),
     Column("location", Geography, nullable=False),
     Column("activity_type", String(20), nullable=False),
-    Column("google_maps_url", String(500)),
+    Column("map_url", String(500)),
     Column("website_url", String(500)),
     Column("start_date", TIMESTAMP(timezone=True)),
     Column("end_date", TIMESTAMP(timezone=True)),
