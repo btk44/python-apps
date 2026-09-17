@@ -4,6 +4,9 @@
 apps/expenses/database/inserts.sql
 apps/expenses/constants.py
 apps/activities/constants.py
+.env
+.env.*
+!.env.example
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

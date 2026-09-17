@@ -1,0 +1,35 @@
+###
+POST http://127.0.0.1:8000/activities/search HTTP/1.1
+content-type: application/json
+
+{
+    "name": "Wawel",
+    "country": "PL",
+    "activity_type": "place",
+    "latitude": 50.0125,
+    "longitude": 20.9853,
+    "distance": 100000,
+    "take": 10,
+    "offset": 0
+}
+
+###
+POST http://127.0.0.1:8000/activities/process-single HTTP/1.1
+content-type: application/json
+
+{
+    "activity": {
+        "name": "Visit Wawel Royal Castle",
+        "description": "Explore the royal chambers, courtyards, and exhibitions at Wawel Royal Castle.",
+        "address": "Wawel 5",
+        "countryCode": "PL",
+        "region": "Lesser Poland",
+        "city": "Krakow",
+        "latitude": 50.0542,
+        "longitude": 19.9352,
+        "activityType": "place",
+        "mapUrl": "https://maps.google.com/?q=Wawel+Royal+Castle",
+        "webUrl": "https://wawel.krakow.pl/en",
+        "active": true
+    }
+}

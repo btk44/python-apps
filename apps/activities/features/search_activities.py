@@ -7,7 +7,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncConnection
 
 from apps.activities.features.a_router import router
-from apps.expenses.infrastructure.session import get_connection
+from apps.activities.infrastructure.session import get_db
 
 class ActivitySearchCommand(BaseModel):
     name: str | None = None
@@ -41,12 +41,7 @@ class ActivityDto(BaseModel):
     end_time: datetime | None = None
     targets: list[str] = []
     categories: list[str] = []
-
-
-async def get_db() -> AsyncGenerator[AsyncConnection]:
-    async with get_connection() as conn:
-        yield conn
-
+    distance: float | None = None
 
 SEARCH_ACTIVITIES = text(
     """
@@ -88,6 +83,7 @@ def row_to_activity(row: dict) -> ActivityDto:
         end_time=row["end_date"],
         targets=row["targets"] or [],
         categories=row["categories"] or [],
+        distance=row["distance_m"]
     )
 
 
@@ -111,9 +107,6 @@ async def run_avtivity_search(command: ActivitySearchCommand, conn: AsyncConnect
     result = await conn.execute(SEARCH_ACTIVITIES, parameters)
     return [row_to_activity(dict(row)) for row in result.mappings().all()]
 
-@router.get("/activities/search", response_model=list[ActivityDto])
-async def search_activities(
-    command: ActivitySearchCommand,
-    conn: AsyncConnection = Depends(get_db),
-):
+@router.post("/search", response_model=list[ActivityDto])
+async def search_activities(command: ActivitySearchCommand, conn: AsyncConnection = Depends(get_db)):
     return await run_avtivity_search(command, conn)

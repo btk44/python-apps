@@ -1,24 +1,40 @@
-from __future__ import annotations
+from typing import AsyncGenerator
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from dotenv import load_dotenv
+import os
+from sqlalchemy.pool import NullPool
 
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+load_dotenv()
 
-from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
-from ..constants import DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname")
 
-
-DATABASE_URL = f"postgresql+asyncpg://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}" 
-
-engine: AsyncEngine = create_async_engine(
-    DATABASE_URL,
-    pool_size=10,
-    max_overflow=5,
-    pool_pre_ping=True,
-    echo=False,
+# Note: asyncpg driver, not psycopg2
+DATABASE_URL = (
+    f"postgresql+asyncpg://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
 )
 
+connect_args = {"ssl": "require"}
 
-@asynccontextmanager
-async def get_connection() -> AsyncGenerator[AsyncConnection, None]:
-    async with engine.connect() as conn:
-        yield conn
+engine = create_async_engine(DATABASE_URL, connect_args=connect_args, poolclass=NullPool)
+
+AsyncSessionLocal = async_sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+)
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    async with AsyncSessionLocal() as session:
+        yield session
+
+# For use outside FastAPI's Depends system
+# async def some_background_task():
+#     async with AsyncSessionLocal() as db:
+#         result = await db.execute(select(Item))
+#         return result.scalars().all()

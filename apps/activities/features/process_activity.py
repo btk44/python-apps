@@ -12,7 +12,7 @@ from apps.activities.domain.models.activity import Activity
 from apps.activities.features.a_router import router
 from apps.activities.infrastructure.mappers.activity_mapper import activity_to_insert_values
 from apps.activities.infrastructure.tables import activities
-from apps.expenses.infrastructure.session import get_connection
+from apps.activities.infrastructure.session import get_db
 
 
 class ActivityDto(BaseModel):
@@ -46,12 +46,6 @@ class ActivityProcessCommand(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     activity: ActivityDto
-
-
-async def get_db() -> AsyncGenerator[AsyncConnection, None]:
-    async with get_connection() as conn:
-        yield conn
-
 
 def activity_dto_to_entity(dto: ActivityDto) -> Activity:
     return Activity(
@@ -130,7 +124,7 @@ async def create_activity(conn: AsyncConnection, activity: Activity) -> Activity
 	)
 
 
-@router.post("/activity/process-single", response_model=ActivityDto, status_code=status.HTTP_201_CREATED)
+@router.post("/process-single", response_model=ActivityDto, status_code=status.HTTP_201_CREATED)
 async def process_activity(
 	command: ActivityProcessCommand,
 	conn: AsyncConnection = Depends(get_db),
