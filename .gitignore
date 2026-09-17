@@ -2,8 +2,6 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python,visualstudiocode
 
 apps/expenses/database/inserts.sql
-apps/expenses/constants.py
-apps/activities/constants.py
 .env
 .env.*
 !.env.example
