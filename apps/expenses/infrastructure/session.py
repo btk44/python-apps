@@ -10,10 +10,18 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, create_async_engine
-from ..constants import DATABASE_USER, DATABASE_PASSWORD, DATABASE_HOST, DATABASE_NAME
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
-DATABASE_URL = f"postgresql+asyncpg://{DATABASE_USER}:{DATABASE_PASSWORD}@{DATABASE_HOST}/{DATABASE_NAME}" 
+USER = os.getenv("user")
+PASSWORD = os.getenv("password")
+HOST = os.getenv("host")
+PORT = os.getenv("port")
+DBNAME = os.getenv("dbname")
+
+DATABASE_URL = f"postgresql+asyncpg://{USER}:{PASSWORD}@{HOST}:{PORT}/{DBNAME}"
 
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,

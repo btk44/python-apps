@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 from datetime import datetime
 
 from fastapi import Depends, HTTPException, status

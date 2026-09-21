@@ -33,3 +33,13 @@ content-type: application/json
         "active": true
     }
 }
+
+###
+POST http://127.0.0.1:8000/activities/ai-activity-assistance HTTP/1.1
+content-type: application/json
+
+{
+    "activity": {
+        "name": "SLAVIC YEAR 2026 wrocław marina"
+    }
+}
